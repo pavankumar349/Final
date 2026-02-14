@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { cropName } = await req.json()
+    const { cropName, marketName } = await req.json()
     
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -20,16 +20,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     )
 
-    // Get fertilizer recommendations from database
-    const { data: recommendations } = await supabaseClient
-      .from('fertilizer_recommendations')
+    // Get market prices from database
+    const { data: prices } = await supabaseClient
+      .from('market_prices')
       .select('*')
       .eq('crop_name', cropName)
+      .eq('market_name', marketName)
+      .order('date', { ascending: false })
       .limit(1)
 
-    if (recommendations && recommendations.length > 0) {
+    if (prices && prices.length > 0) {
       return new Response(
-        JSON.stringify(recommendations[0]),
+        JSON.stringify(prices[0]),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 200,
@@ -37,16 +39,16 @@ serve(async (req) => {
       )
     }
 
-    // If no recommendation found, generate one
-    const recommendation = generateFertilizerRecommendation(cropName)
+    // If no price found, generate one
+    const price = generateMarketPrice(cropName, marketName)
     
     // Save to database
     await supabaseClient
-      .from('fertilizer_recommendations')
-      .insert(recommendation)
+      .from('market_prices')
+      .insert(price)
 
     return new Response(
-      JSON.stringify(recommendation),
+      JSON.stringify(price),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -63,29 +65,27 @@ serve(async (req) => {
   }
 })
 
-function generateFertilizerRecommendation(cropName: string) {
-  const organicFertilizers = [
-    'Farmyard Manure',
-    'Compost',
-    'Vermicompost',
-    'Green Manure',
-    'Neem Cake'
-  ]
+function generateMarketPrice(cropName: string, marketName: string) {
+  const basePrices = {
+    'Rice': { min: 1800, max: 2200 },
+    'Wheat': { min: 1600, max: 2000 },
+    'Maize': { min: 1400, max: 1800 },
+    'Cotton': { min: 5000, max: 6000 },
+    'Soybean': { min: 3000, max: 4000 }
+  }
 
-  const chemicalFertilizers = [
-    'NPK 10:26:26',
-    'Urea',
-    'DAP',
-    'Ammonium Sulfate',
-    'Potassium Sulfate'
-  ]
+  const basePrice = basePrices[cropName] || { min: 1500, max: 2500 }
+  const price = Math.floor(Math.random() * (basePrice.max - basePrice.min + 1)) + basePrice.min
 
   return {
     crop_name: cropName,
-    organic_fertilizers: organicFertilizers.slice(0, 3),
-    chemical_fertilizers: chemicalFertilizers.slice(0, 3),
-    application_timing: 'Apply at sowing and during vegetative growth stage',
-    dosage_per_acre: 'Organic: 4-6 tonnes/acre, Chemical: 100-120 kg/acre',
-    special_notes: 'Split nitrogen application recommended. Monitor soil pH regularly.'
+    market_name: marketName,
+    price_per_quintal: price,
+    date: new Date().toISOString(),
+    price_trend: 'Stable',
+    supply_quantity: 'Moderate',
+    demand_level: 'High',
+    quality_grade: 'A',
+    special_notes: 'Prices may vary based on quality and market conditions'
   }
-}
+} 

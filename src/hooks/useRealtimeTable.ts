@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -9,25 +8,22 @@ import { toast } from "@/components/ui/use-toast";
 type TableName = keyof Database['public']['Tables'] | string;
 
 // This hook fetches data from a Supabase table and sets up a realtime subscription
-export function useRealtimeTable<T>(table: TableName, initialQuery: Record<string, any> = {}) {
+export function useRealtimeTable<T extends { id?: string }>(table: TableName, initialQuery: Record<string, unknown> = {}) {
   const [rows, setRows] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const tableName = table as string; // Force string type for all usage
+  const tableName = table as string;
 
-  // Fetch initial data
   useEffect(() => {
     let isMounted = true;
     (async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Cast the entire supabase instance to any to bypass TypeScript restrictions
-        const { data, error } = await (supabase as any)
+        const { data, error } = await supabase
           .from(tableName)
           .select("*")
           .order("created_at", { ascending: false });
-          
         if (error) {
           console.error(`Error fetching data from ${tableName}:`, error);
           setError(`Failed to load data from ${tableName}: ${error.message}`);
@@ -39,11 +35,12 @@ export function useRealtimeTable<T>(table: TableName, initialQuery: Record<strin
             });
           }
         } else if (isMounted && data) {
-          setRows(data as unknown as T[]);
+          setRows(data as T[]);
         }
       } catch (err) {
-        console.error(`Unexpected error with ${tableName}:`, err);
-        setError(`Unexpected error: ${err instanceof Error ? err.message : String(err)}`);
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        console.error(`Unexpected error with ${tableName}:`, errorMsg);
+        setError(`Unexpected error: ${errorMsg}`);
       } finally {
         if (isMounted) {
           setIsLoading(false);
@@ -55,7 +52,6 @@ export function useRealtimeTable<T>(table: TableName, initialQuery: Record<strin
     };
   }, [tableName, ...Object.values(initialQuery || {})]);
 
-  // Subscribe for realtime updates
   useEffect(() => {
     const channel = supabase
       .channel(`realtime-${tableName}`)
@@ -66,19 +62,19 @@ export function useRealtimeTable<T>(table: TableName, initialQuery: Record<strin
           setRows((prev) => {
             try {
               if (payload.eventType === "INSERT") {
-                // Add newly inserted row to start
-                return [payload.new as unknown as T, ...prev];
+                return [payload.new as T, ...prev];
               }
               if (payload.eventType === "UPDATE") {
-                return prev.map((row) => 
-                  (row as any)["id"] === payload.new.id ? (payload.new as unknown as T) : row
+                return prev.map((row) =>
+                  row.id === payload.new.id ? (payload.new as T) : row
                 );
               }
               if (payload.eventType === "DELETE") {
-                return prev.filter((row) => (row as any)["id"] !== payload.old.id);
+                return prev.filter((row) => row.id !== payload.old.id);
               }
             } catch (err) {
-              console.error("Error processing realtime update:", err);
+              const errorMsg = err instanceof Error ? err.message : String(err);
+              console.error("Error processing realtime update:", errorMsg);
             }
             return prev;
           });

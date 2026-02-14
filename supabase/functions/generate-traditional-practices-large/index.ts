@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -6,7 +5,7 @@ const openAIApiKey = Deno.env.get("OPENAI_API_KEY");
 const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
 const googleApiKey = Deno.env.get("GOOGLE_API_KEY");
 
-let cachedData: any[] | null = null;
+let cachedData: Record<string, unknown>[] | null = null;
 let lastCacheTime = 0;
 const CACHE_DURATION_MS = 1000 * 60 * 30; // 30 minutes
 
@@ -53,7 +52,7 @@ serve(async (req) => {
       const result = await response.json();
       try {
         practices = JSON.parse(result.choices[0].message.content);
-      } catch (_) {}
+      } catch (err) { console.error(err); }
     }
 
     // 2. Try Gemini
@@ -71,7 +70,7 @@ serve(async (req) => {
       try {
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
         practices = JSON.parse(text);
-      } catch (_) {}
+      } catch (err) { console.error(err); }
     }
 
     // 3. Try Google (if set)

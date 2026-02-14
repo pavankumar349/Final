@@ -1,73 +1,208 @@
-# Welcome to your Lovable project
+# AgriSlove - Smart Agriculture Platform
 
-## Project info
+AgriSlove is a comprehensive agricultural platform that helps farmers make informed decisions using modern technology and traditional knowledge. The platform combines AI-powered features with community-driven insights to provide a complete farming solution.
 
-**URL**: https://lovable.dev/projects/aeb6ee06-0eaf-46f9-bd4d-0e303f951d93
+## 🌟 Features
 
-## How can I edit this code?
+### 1. Disease Detection
+- Upload plant images for instant disease identification
+- Get detailed information about symptoms and treatments
+- Receive preventive measures and best practices
+- Track disease history and patterns
 
-There are several ways of editing your application.
+### 2. Crop Recommendations
+- Get personalized crop suggestions based on:
+  - Soil type
+  - Season
+  - Region
+- Detailed information about:
+  - Water requirements
+  - Growth period
+  - Yield potential
+  - Market demand
 
-**Use Lovable**
+### 3. Market Prices
+- Real-time market price updates
+- Price trends and analysis
+- Supply and demand information
+- Quality grading
+- Multiple market coverage
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/aeb6ee06-0eaf-46f9-bd4d-0e303f951d93) and start prompting.
+### 4. Weather Information
+- Location-based weather updates
+- Seasonal forecasts
+- Agricultural advisories
+- Temperature and rainfall alerts
+- Wind speed monitoring
 
-Changes made via Lovable will be committed automatically to this repo.
+### 5. Fertilizer Recommendations
+- Crop-specific fertilizer suggestions
+- Organic and chemical options
+- Application timing guidance
+- Dosage recommendations
+- Special notes and precautions
 
-**Use your preferred IDE**
+### 6. AI-Powered Chatbot
+- 24/7 agricultural assistance
+- Answers to farming queries
+- Traditional practice information
+- Crop management advice
+- Sustainable farming guidance
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 7. Community Forum
+- Connect with fellow farmers
+- Share experiences and knowledge
+- Post questions and get answers
+- Category-based discussions
+- Like and comment on posts
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 8. Traditional Practices
+- Region-specific farming methods
+- Traditional wisdom integration
+- Sustainable farming techniques
+- Community-verified practices
+- Modern adaptation guidelines
 
-Follow these steps:
+## 🚀 Getting Started
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prerequisites
+- Node.js (v18 or higher)
+- npm or yarn
+- Supabase account (optional - app works with demo data)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Quick Start (5 minutes)
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. **Navigate to project folder:**
+```bash
+cd agrislove-01
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+2. **Install dependencies:**
+```bash
+npm install
+```
+
+3. **Create `.env` file** (optional - app works without it):
+Create a `.env` file in the `agrislove-01/` directory:
+```env
+VITE_SUPABASE_URL=https://derildzszqbqbgeygznk.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlcmlsZHpzenFicWJnZXlnem5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ3Mzg4MzEsImV4cCI6MjA2MDMxNDgzMX0.olc4Ade8TjAM3kxo6JeoP7DhyMuSpm8Dm4y2rA6fTlE
+VITE_GEMINI_API_KEY=AIzaSyDo1ndEm0_eLxpOenbjcJWLwvGGLndtAAM
+```
+
+4. **Populate the database** (optional - recommended for full functionality):
+```bash
+npm run populate-db
+```
+This will populate your Supabase database with demo data for all features. See `scripts/README.md` for more details.
+
+5. **Start the development server:**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be available at **`http://localhost:8080`**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Build for Production
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The build output will be in the `dist/` folder, ready for deployment.
 
-## What technologies are used for this project?
+### Deploy to Production
 
-This project is built with:
+See `DEPLOYMENT.md` for detailed deployment instructions for:
+- Railway
+- Render
+- Firebase Hosting
+- Vercel
+- Netlify
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 🛠️ Tech Stack
 
-## How can I deploy this project?
+- Frontend:
+  - React
+  - TypeScript
+  - Vite
+  - Tailwind CSS
+  - Shadcn UI
 
-Simply open [Lovable](https://lovable.dev/projects/aeb6ee06-0eaf-46f9-bd4d-0e303f951d93) and click on Share -> Publish.
+- Backend:
+  - Supabase
+  - Edge Functions
+  - PostgreSQL
 
-## Can I connect a custom domain to my Lovable project?
+## 📱 Features in Detail
 
-Yes, you can!
+### Disease Detection
+- Upload plant images
+- AI-powered disease identification
+- Treatment recommendations
+- Prevention strategies
+- Historical data tracking
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Crop Recommendations
+- Soil analysis integration
+- Seasonal suitability
+- Regional adaptation
+- Yield optimization
+- Market demand analysis
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Market Prices
+- Real-time price updates
+- Historical price trends
+- Market demand analysis
+- Quality-based pricing
+- Multiple market coverage
+
+### Weather Information
+- Location-based updates
+- Seasonal forecasts
+- Agricultural advisories
+- Extreme weather alerts
+- Farming recommendations
+
+### Fertilizer Recommendations
+- Crop-specific suggestions
+- Organic alternatives
+- Application timing
+- Dosage guidelines
+- Soil health monitoring
+
+### AI Chatbot
+- 24/7 assistance
+- Farming queries
+- Best practices
+- Problem-solving
+- Knowledge sharing
+
+### Community Forum
+- User interactions
+- Knowledge sharing
+- Question-answer platform
+- Category organization
+- Engagement features
+
+### Traditional Practices
+- Regional wisdom
+- Sustainable methods
+- Modern adaptations
+- Community verification
+- Best practices
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Farmers and agricultural experts
+- Open-source community
+- Traditional farming communities
+- Agricultural research institutions

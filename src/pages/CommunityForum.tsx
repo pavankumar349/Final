@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,13 +8,35 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { 
   MessageSquare, ThumbsUp, User, Calendar, AlertCircle, 
-  Search, Loader2, Filter, RefreshCw, Send
+  Search, Loader2, Filter, RefreshCw, Send, Heart, Lightbulb, ThumbsDown
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { useRealtimeTable } from "@/hooks/useRealtimeTable";
 import { toast } from '@/components/ui/use-toast';
 import { Textarea } from '@/components/ui/textarea';
+
+interface CommunityPost {
+  id?: string;
+  user_id?: string;
+  content: string;
+  created_at?: string;
+  likes?: number;
+  reactions?: {
+    helpful: number;
+    insightful: number;
+    disagree: number;
+  };
+  [key: string]: unknown;
+}
+
+interface CommunityComment {
+  id?: string;
+  post_id: string;
+  user_id?: string;
+  content: string;
+  created_at?: string;
+}
 
 const CommunityForum = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -26,7 +47,10 @@ const CommunityForum = () => {
   const [newPostTopic, setNewPostTopic] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const { rows: allPosts, isLoading, error, setRows } = useRealtimeTable<any>("community_posts", {});
+  const { rows: allPosts, isLoading, error, setRows } = useRealtimeTable<CommunityPost>("community_posts", {});
+  const [commentsByPost, setCommentsByPost] = useState<Record<string, CommunityComment[]>>({});
+  const [newCommentText, setNewCommentText] = useState<Record<string, string>>({});
+  const [expandedPostIds, setExpandedPostIds] = useState<Record<string, boolean>>({});
 
   // If there was an error, show a toast message (only once)
   useEffect(() => {
@@ -78,6 +102,7 @@ const CommunityForum = () => {
         topic: 'Pest Control',
         user_id: 'mock-user-1',
         likes: 12,
+        reactions: { helpful: 6, insightful: 4, disagree: 1 },
         created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
@@ -87,6 +112,7 @@ const CommunityForum = () => {
         topic: 'Water Management',
         user_id: 'mock-user-2',
         likes: 8,
+        reactions: { helpful: 3, insightful: 2, disagree: 0 },
         created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
@@ -96,6 +122,7 @@ const CommunityForum = () => {
         topic: 'Market Insights',
         user_id: 'mock-user-3',
         likes: 5,
+        reactions: { helpful: 1, insightful: 1, disagree: 0 },
         created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
@@ -105,6 +132,7 @@ const CommunityForum = () => {
         topic: 'Traditional Practices',
         user_id: 'mock-user-4',
         likes: 15,
+        reactions: { helpful: 7, insightful: 6, disagree: 1 },
         created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
@@ -114,9 +142,74 @@ const CommunityForum = () => {
         topic: 'Soil Health',
         user_id: 'mock-user-5',
         likes: 3,
+        reactions: { helpful: 1, insightful: 0, disagree: 0 },
         created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
+  };
+
+  const generateMockComments = (postId: string): CommunityComment[] => {
+    const samples = [
+      'Great point! I tried this and it worked well.',
+      'Can you share photos or more details?',
+      'I recommend adding farmyard manure too.',
+      'This method saved me water last season.',
+      'Thanks for sharing, very helpful!'
+    ];
+    return Array.from({ length: 3 }).map((_, i) => ({
+      id: `c-${postId}-${i}`,
+      post_id: postId,
+      user_id: `u-${i}`,
+      content: samples[i % samples.length],
+      created_at: new Date(Date.now() - (i + 1) * 60 * 60 * 1000).toISOString()
+    }));
+  };
+
+  const loadComments = async (postId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        setCommentsByPost(prev => ({ ...prev, [postId]: data as CommunityComment[] }));
+        return;
+      }
+    } catch {}
+    // Fallback to mock comments
+    setCommentsByPost(prev => ({ ...prev, [postId]: generateMockComments(postId) }));
+  };
+
+  const toggleExpandPost = (postId: string) => {
+    setExpandedPostIds(prev => ({ ...prev, [postId]: !prev[postId] }));
+    if (!commentsByPost[postId]) void loadComments(postId);
+  };
+
+  const handleAddComment = async (postId: string) => {
+    const text = (newCommentText[postId] || '').trim();
+    if (!text) return;
+    const comment: CommunityComment = {
+      post_id: postId,
+      user_id: 'current-user',
+      content: text,
+      created_at: new Date().toISOString()
+    };
+    try {
+      const { data, error } = await supabase
+        .from('community_comments')
+        .insert(comment)
+        .select();
+      if (!error && data) {
+        setCommentsByPost(prev => ({ ...prev, [postId]: [data[0], ...(prev[postId] || [])] }));
+      } else {
+        setCommentsByPost(prev => ({ ...prev, [postId]: [{ ...comment, id: `local-${Date.now()}` }, ...(prev[postId] || [])] }));
+      }
+    } catch {
+      setCommentsByPost(prev => ({ ...prev, [postId]: [{ ...comment, id: `local-${Date.now()}` }, ...(prev[postId] || [])] }));
+    } finally {
+      setNewCommentText(prev => ({ ...prev, [postId]: '' }));
+    }
   };
 
   const handleNewPostSubmit = async (e: React.FormEvent) => {
@@ -206,6 +299,34 @@ const CommunityForum = () => {
         description: "Could not like the post. Please try again.",
         variant: "destructive"
       });
+    }
+  };
+
+  const handlePostReaction = async (postId: string, type: keyof NonNullable<CommunityPost["reactions"]>) => {
+    try {
+      const post = posts.find(p => p.id === postId);
+      if (!post) return;
+
+      const current = (post.reactions || { helpful: 0, insightful: 0, disagree: 0 });
+      const updated = { ...current, [type]: (current as any)[type] + 1 } as CommunityPost["reactions"];
+
+      // Try to persist as a JSON column if available
+      try {
+        const { data, error } = await supabase
+          .from('community_posts')
+          .update({ reactions: updated })
+          .eq('id', postId)
+          .select();
+        if (!error && data) {
+          setRows(allPosts.map(p => p.id === postId ? { ...data[0] } : p));
+          return;
+        }
+      } catch {}
+
+      // Fallback: update locally only
+      setRows(allPosts.map(p => p.id === postId ? { ...p, reactions: updated } : p));
+    } catch (err) {
+      console.error("Error reacting to post:", err);
     }
   };
 
@@ -404,8 +525,68 @@ const CommunityForum = () => {
                             <ThumbsUp size={14} className="mr-1" />
                             {post.likes || 0}
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={() => handlePostReaction(post.id as string, 'helpful')}
+                          >
+                            <Heart size={14} className="mr-1" />
+                            {post.reactions?.helpful || 0}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={() => handlePostReaction(post.id as string, 'insightful')}
+                          >
+                            <Lightbulb size={14} className="mr-1" />
+                            {post.reactions?.insightful || 0}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={() => handlePostReaction(post.id as string, 'disagree')}
+                          >
+                            <ThumbsDown size={14} className="mr-1" />
+                            {post.reactions?.disagree || 0}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-6 px-2"
+                            onClick={() => toggleExpandPost(post.id as string)}
+                          >
+                            {expandedPostIds[post.id as string] ? 'Hide Comments' : 'View Comments'}
+                          </Button>
                         </div>
                       </div>
+                      {expandedPostIds[post.id as string] && (
+                        <div className="mt-4 pt-4 border-t">
+                          <div className="space-y-3">
+                            {(commentsByPost[post.id as string] || []).map((c) => (
+                              <div key={c.id} className="text-sm">
+                                <div className="flex items-center text-gray-500 gap-2">
+                                  <User size={12} />
+                                  <span>Member</span>
+                                  <span>•</span>
+                                  <span>{c.created_at ? format(new Date(c.created_at), 'MMM d, h:mm a') : ''}</span>
+                                </div>
+                                <p className="text-gray-700 mt-1">{c.content}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            <Input
+                              placeholder="Write a comment..."
+                              value={newCommentText[post.id as string] || ''}
+                              onChange={(e) => setNewCommentText(prev => ({ ...prev, [post.id as string]: e.target.value }))}
+                            />
+                            <Button onClick={() => handleAddComment(post.id as string)}>Post</Button>
+                          </div>
+                        </div>
+                      )}
                     </Card>
                   ))
                 ) : (

@@ -19,6 +19,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 const Header: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +27,7 @@ const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
 
   React.useEffect(() => {
     // Get current user on component mount
@@ -57,12 +58,14 @@ const Header: React.FC = () => {
         description: "You have been logged out of your account.",
       });
       navigate('/');
-    } catch (error: any) {
-      toast({
-        title: "Error logging out",
-        description: error.message,
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast({
+          title: "Error logging out",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -85,7 +88,7 @@ const Header: React.FC = () => {
         <nav className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
             <Sprout className="h-6 w-6 text-agri-green" />
-            <span className="text-xl font-bold text-agri-green-dark">KrishiMitra</span>
+            <span className="text-xl font-bold text-agri-green-dark">Agrislove</span>
           </Link>
 
           {/* Mobile Menu Button */}

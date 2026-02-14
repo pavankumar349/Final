@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Sprout, AlertCircle } from "lucide-react";
 import RecommendationResultCard from "./RecommendationResultCard";
@@ -6,6 +5,18 @@ import { CropRecommendation } from "./CropRecommendationForm";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
+
+interface Crop {
+  id?: string;
+  name: string;
+  suitability: number;
+  description: string;
+  growingPeriod: string;
+  waterRequirement: string;
+  traditionalPractices: string;
+  fertilizer?: string;
+  [key: string]: unknown;
+}
 
 interface Props {
   recommendations: CropRecommendation[] | null;
@@ -23,7 +34,7 @@ const RecommendationResultList: React.FC<Props> = ({
   isAnalyzing,
   formData 
 }) => {
-  const [recentRecommendations, setRecentRecommendations] = useState<any[]>([]);
+  const [recentRecommendations, setRecentRecommendations] = useState<Crop[]>([]);
 
   // Fetch recent recommendations for the region
   const { data: recentData, isLoading, refetch } = useQuery({
